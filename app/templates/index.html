@@ -7,25 +7,12 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* Loader CSS */
-    .loader {
-        border: 8px solid #f3f3f3; /* Light gray */
-        border-top: 8px solid #1B9AAA; /* Primary color */
-        border-radius: 50%;
-        width: 80px;
-        height: 80px;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1E2A38, #3D4E61); /* Gradient Background */
+            background: linear-gradient(135deg, #1E2A38, #3D4E61);
             background-size: 300% 300%;
             animation: gradientBG 15s ease infinite;
+            overflow: hidden; /* Prevent scroll during load */
         }
 
         @keyframes gradientBG {
@@ -34,16 +21,49 @@
             100% { background-position: 0% 50%; }
         }
 
+        /* Loader Styling */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1E2A38;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1.5s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hide content until loaded */
+        .hidden-content {
+            display: none;
+        }
+
         /* Current Class Styling */
         .current-class-container {
-            width: 250px; /* Medium Size */
+            width: 250px;
             height: 250px;
             margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: #1B9AAA;
-            border-radius: 12px; /* Rounded square */
+            border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             overflow: hidden;
             animation: slideIn 20s linear infinite;
@@ -52,11 +72,11 @@
         }
 
         .paused { animation-play-state: paused; }
-@keyframes slideIn {
-    0% { transform: translateX(-50%); }
-    100% { transform: translateX(50%); }
-}
 
+        @keyframes slideIn {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
 
         .current-class-container:hover {
             background-color: #15616D;
@@ -71,69 +91,53 @@
         }
 
         .section-header { color: #A8DADC; }
-        .footer-bg { background-color: #0A3D62; } /* Dark blue footer */
+        .footer-bg { background-color: #0A3D62; }
     </style>
 </head>
 <body class="text-gray-100 flex flex-col min-h-screen">
-    <!-- Loader Element -->
-<div id="loader" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-50 hidden">
-    <div class="loader"></div>
-</div>
-    <!-- Header with Date and Time -->
-    <div class="container mx-auto p-6 text-center">
-        <h1 class="text-4xl font-bold section-header">Today's Classes</h1>
-        <p id="date-time" class="text-lg mt-2"></p>
+    <!-- Loader -->
+    <div id="loader">
+        <div class="loader"></div>
     </div>
 
-    <!-- Current Class Section -->
-    <div class="container mx-auto p-6 overflow-hidden">
-        <h2 class="text-2xl font-semibold text-center section-header mb-4">Current Class</h2>
-        <div id="current-class" class="current-class-container text-center text-lg font-medium current-class-bg rounded-lg shadow-lg"></div>
-        <p id="countdown" class="text-center text-sm mt-2 text-gray-200"></p>
+    <!-- Main Content -->
+    <div id="content" class="hidden-content">
+        <!-- Header with Date and Time -->
+        <div class="container mx-auto p-6 text-center">
+            <h1 class="text-4xl font-bold section-header">Today's Classes</h1>
+            <p id="date-time" class="text-lg mt-2"></p>
+        </div>
+
+        <!-- Current Class Section -->
+        <div class="container mx-auto p-6 overflow-hidden">
+            <h2 class="text-2xl font-semibold text-center section-header mb-4">Current Class</h2>
+            <div id="current-class" class="current-class-container text-center text-lg font-medium rounded-lg shadow-lg"></div>
+            <p id="countdown" class="text-center text-sm mt-2 text-gray-200"></p>
+        </div>
+
+        <!-- Class List Section -->
+        <div class="container mx-auto p-6 flex-grow">
+            <h2 class="text-2xl font-semibold text-center section-header mb-4">Today's Classes</h2>
+            <div id="class-list" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer-bg text-center p-4 mt-auto">
+            <p class="text-gray-300">Developed by Md. Rofaz Hasan Rafiu</p>
+        </footer>
     </div>
 
-    <!-- Class List Section -->
-    <div class="container mx-auto p-6 flex-grow">
-        <h2 class="text-2xl font-semibold text-center section-header mb-4">Today's Classes</h2>
-        <div id="class-list" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4"></div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="footer-bg text-center p-4 mt-auto">
-        <p class="text-gray-300">Developed by Md. Rofaz Hasan Rafiu</p>
-    </footer>
-
-    <!-- JavaScript for Socket.IO, Date-Time, and Countdown -->
+    <!-- JavaScript for Loader, Date-Time, and Socket.IO -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
-        // Show loader function
-function showLoader() {
-    document.getElementById('loader').classList.remove('hidden');
-}
+        // Loader removal after content is loaded
+        window.addEventListener("load", function() {
+            const loader = document.getElementById('loader');
+            const content = document.getElementById('content');
+            loader.style.display = 'none';
+            content.style.display = 'block';
+        });
 
-// Hide loader function
-function hideLoader() {
-    document.getElementById('loader').classList.add('hidden');
-}
-
-// Example: Show loader when data is being fetched
-socket.on("connect", () => {
-    showLoader();  // Show loader when the connection is initiated
-});
-
-socket.on("class_data", (data) => {
-    hideLoader();  // Hide loader when data is received and rendered
-
-    // Existing code to update the class list and current class
-    document.getElementById('current-class').innerHTML = `
-        <div>
-            <h3 class="text-2xl font-bold">${data.current_class.subject}</h3>
-            <p>${data.current_class.teacher} - Room ${data.current_class.room}</p>
-            <p>${data.current_class.start_time} - ${data.current_class.end_time}</p>
-            <p class="countdown-timer" id="countdown"></p>
-        </div>`;
-    startCountdown(data.current_class.end_time);
-});
         // Update Date and Time
         function updateDateTime() {
             const now = new Date();
@@ -171,15 +175,9 @@ socket.on("class_data", (data) => {
             `).join('');
         });
 
-        // Pause animation on hover
-        const currentClassDiv = document.getElementById('current-class');
-        currentClassDiv.addEventListener('mouseenter', () => currentClassDiv.classList.add('paused'));
-        currentClassDiv.addEventListener('mouseleave', () => currentClassDiv.classList.remove('paused'));
-
         // Countdown Timer Function
         function startCountdown(endTime) {
             const endParts = endTime.split(':');
-            const now = new Date();
             const end = new Date();
             end.setHours(parseInt(endParts[0]), parseInt(endParts[1]), 0);
 
