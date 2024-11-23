@@ -12,7 +12,6 @@
             background: linear-gradient(135deg, #1E2A38, #3D4E61);
             background-size: 300% 300%;
             animation: gradientBG 15s ease infinite;
-            overflow: hidden; /* Prevent scroll during load */
         }
 
         @keyframes gradientBG {
@@ -33,6 +32,7 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
+            transition: opacity 0.5s ease;
         }
 
         .loader {
@@ -53,45 +53,6 @@
         .hidden-content {
             display: none;
         }
-
-        /* Current Class Styling */
-        .current-class-container {
-            width: 250px;
-            height: 250px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #1B9AAA;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            animation: slideIn 20s linear infinite;
-            transition: background-color 0.3s ease;
-            position: relative;
-        }
-
-        .paused { animation-play-state: paused; }
-
-        @keyframes slideIn {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .current-class-container:hover {
-            background-color: #15616D;
-            color: #FFFAF3;
-        }
-
-        .countdown-timer {
-            position: absolute;
-            bottom: 10px;
-            font-size: 1rem;
-            color: #FFFAF3;
-        }
-
-        .section-header { color: #A8DADC; }
-        .footer-bg { background-color: #0A3D62; }
     </style>
 </head>
 <body class="text-gray-100 flex flex-col min-h-screen">
@@ -104,38 +65,43 @@
     <div id="content" class="hidden-content">
         <!-- Header with Date and Time -->
         <div class="container mx-auto p-6 text-center">
-            <h1 class="text-4xl font-bold section-header">Today's Classes</h1>
+            <h1 class="text-4xl font-bold">Today's Classes</h1>
             <p id="date-time" class="text-lg mt-2"></p>
         </div>
 
         <!-- Current Class Section -->
         <div class="container mx-auto p-6 overflow-hidden">
-            <h2 class="text-2xl font-semibold text-center section-header mb-4">Current Class</h2>
+            <h2 class="text-2xl font-semibold text-center mb-4">Current Class</h2>
             <div id="current-class" class="current-class-container text-center text-lg font-medium rounded-lg shadow-lg"></div>
-            <p id="countdown" class="text-center text-sm mt-2 text-gray-200"></p>
         </div>
 
         <!-- Class List Section -->
         <div class="container mx-auto p-6 flex-grow">
-            <h2 class="text-2xl font-semibold text-center section-header mb-4">Today's Classes</h2>
+            <h2 class="text-2xl font-semibold text-center mb-4">Today's Classes</h2>
             <div id="class-list" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4"></div>
         </div>
 
         <!-- Footer -->
-        <footer class="footer-bg text-center p-4 mt-auto">
+        <footer class="text-center p-4 mt-auto bg-gray-800">
             <p class="text-gray-300">Developed by Md. Rofaz Hasan Rafiu</p>
         </footer>
     </div>
 
-    <!-- JavaScript for Loader, Date-Time, and Socket.IO -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <!-- JavaScript for Loader, Date-Time, and Class Data -->
     <script>
         // Loader removal after content is loaded
         window.addEventListener("load", function() {
             const loader = document.getElementById('loader');
             const content = document.getElementById('content');
-            loader.style.display = 'none';
-            content.style.display = 'block';
+
+            // Hide loader and display content
+            setTimeout(() => {
+                loader.style.opacity = 0;
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    content.style.display = 'block';
+                }, 500);  // Match this to CSS transition time
+            }, 1000);  // Optional delay for a smoother experience
         });
 
         // Update Date and Time
@@ -146,54 +112,6 @@
         }
         setInterval(updateDateTime, 1000);
         updateDateTime();
-
-        // Socket.IO for Real-Time Class Updates
-        const socket = io();
-
-        socket.on("class_data", (data) => {
-            const currentClass = document.getElementById('current-class');
-            if (data.current_class.subject) {
-                currentClass.innerHTML = `
-                    <div>
-                        <h3 class="text-2xl font-bold">${data.current_class.subject}</h3>
-                        <p>${data.current_class.teacher} - Room ${data.current_class.room}</p>
-                        <p>${data.current_class.start_time} - ${data.current_class.end_time}</p>
-                        <p class="countdown-timer" id="countdown"></p>
-                    </div>`;
-                startCountdown(data.current_class.end_time);
-            } else {
-                currentClass.innerHTML = `<p class="text-lg text-gray-800">No ongoing class</p>`;
-                document.getElementById('countdown').textContent = '';
-            }
-
-            document.getElementById('class-list').innerHTML = data.today_classes.map(c => `
-                <div class="p-4 bg-gray-800 rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold">${c.subject}</h3>
-                    <p>${c.teacher} - Room ${c.room}</p>
-                    <p>${c.start_time} - ${c.end_time}</p>
-                </div>
-            `).join('');
-        });
-
-        // Countdown Timer Function
-        function startCountdown(endTime) {
-            const endParts = endTime.split(':');
-            const end = new Date();
-            end.setHours(parseInt(endParts[0]), parseInt(endParts[1]), 0);
-
-            const interval = setInterval(() => {
-                const now = new Date();
-                const diff = Math.floor((end - now) / 1000);
-                if (diff > 0) {
-                    const minutes = Math.floor(diff / 60);
-                    const seconds = diff % 60;
-                    document.getElementById('countdown').textContent = `Ends in ${minutes} min ${seconds} sec`;
-                } else {
-                    clearInterval(interval);
-                    document.getElementById('countdown').textContent = 'Class has ended';
-                }
-            }, 1000);
-        }
     </script>
 </body>
 </html>
