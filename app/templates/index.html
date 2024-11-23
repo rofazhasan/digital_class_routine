@@ -7,6 +7,20 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        /* Loader CSS */
+    .loader {
+        border: 8px solid #f3f3f3; /* Light gray */
+        border-top: 8px solid #1B9AAA; /* Primary color */
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #1E2A38, #3D4E61); /* Gradient Background */
@@ -61,6 +75,10 @@
     </style>
 </head>
 <body class="text-gray-100 flex flex-col min-h-screen">
+    <!-- Loader Element -->
+<div id="loader" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-50 hidden">
+    <div class="loader"></div>
+</div>
     <!-- Header with Date and Time -->
     <div class="container mx-auto p-6 text-center">
         <h1 class="text-4xl font-bold section-header">Today's Classes</h1>
@@ -88,6 +106,34 @@
     <!-- JavaScript for Socket.IO, Date-Time, and Countdown -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
+        // Show loader function
+function showLoader() {
+    document.getElementById('loader').classList.remove('hidden');
+}
+
+// Hide loader function
+function hideLoader() {
+    document.getElementById('loader').classList.add('hidden');
+}
+
+// Example: Show loader when data is being fetched
+socket.on("connect", () => {
+    showLoader();  // Show loader when the connection is initiated
+});
+
+socket.on("class_data", (data) => {
+    hideLoader();  // Hide loader when data is received and rendered
+
+    // Existing code to update the class list and current class
+    document.getElementById('current-class').innerHTML = `
+        <div>
+            <h3 class="text-2xl font-bold">${data.current_class.subject}</h3>
+            <p>${data.current_class.teacher} - Room ${data.current_class.room}</p>
+            <p>${data.current_class.start_time} - ${data.current_class.end_time}</p>
+            <p class="countdown-timer" id="countdown"></p>
+        </div>`;
+    startCountdown(data.current_class.end_time);
+});
         // Update Date and Time
         function updateDateTime() {
             const now = new Date();
