@@ -1,6 +1,3 @@
-### **README.md**
-
----
 
 # **Class Schedule Web Application**
 
