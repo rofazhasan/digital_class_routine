@@ -36,6 +36,33 @@
         .download-btn:hover {
             background-color: #FF7A00;
         }
+
+        /* Table styling for PDF */
+        #pdf-content {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            width: 100%;
+            border-collapse: collapse;
+            color: #333;
+        }
+
+        #pdf-content th, #pdf-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #pdf-content th {
+            background-color: #1B9AAA;
+            color: white;
+        }
+
+        #pdf-content tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #pdf-content tr:hover {
+            background-color: #ddd;
+        }
     </style>
 </head>
 <body class="text-gray-100 flex flex-col min-h-screen">
@@ -60,18 +87,48 @@
         <p class="text-gray-300">Developed by Md. Rofaz Hasan Rafiu</p>
     </footer>
 
+    <!-- Hidden Table for PDF Content -->
+    <div id="pdf-container" class="hidden">
+        <h1 class="text-2xl font-bold mb-4">Weekly Class Schedule</h1>
+        <table id="pdf-content">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Classroom</th>
+                    <th>Subject</th>
+                    <th>Teacher</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for class in weekly_classes %}
+                    <tr>
+                        <td>{{ class.day }}</td>
+                        <td>{{ class.time }}</td>
+                        <td>{{ class.classroom }}</td>
+                        <td>{{ class.subject }}</td>
+                        <td>{{ class.teacher }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
     <!-- JavaScript for PDF Download -->
     <script>
         function downloadPDF() {
-            const element = document.getElementById('schedule');
+            const element = document.getElementById('pdf-container');
             const options = {
                 margin: 0.5,
-                filename: 'weekly_schedule.pdf',
+                filename: 'full_weekly_schedule.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
-            html2pdf().set(options).from(element).save();
+            element.classList.remove('hidden');  // Make table visible for the screenshot
+            html2pdf().set(options).from(element).save().then(() => {
+                element.classList.add('hidden');  // Hide the table after downloading
+            });
         }
     </script>
 </body>
