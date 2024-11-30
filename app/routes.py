@@ -56,3 +56,12 @@ def emit_classes():
     }
 
     emit("class_data", data)
+@routes.route("/weeklyschedule")
+def weekly_schedule():
+    return render_template("weeklyschedule.html")
+
+@routes.route("/weeklyschedule/<day>")
+def weekly_class(day):
+    classes = Class.query.filter_by(day=day).all()
+    return render_template("day_classes.html", day=day, classes=classes)
+
