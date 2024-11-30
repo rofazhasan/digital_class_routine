@@ -25,7 +25,7 @@ def emit_classes():
     ongoing_class = next((c for c in classes if c.start_time <= now < c.end_time), None)
 
     data = {
-        "today_classes": [{"subject": c.subject, "teacher": c.teacher, "room": c.room, "start_time": str(c.start_time), "end_time": str(c.end_time)} for c in classes],
+        "today_classes": [{"subject": c.subject, "teacher": c.teacher, "room": c.room, "start_time": str(datetime.strptime(str(c.start_time) , "%H:%M:%S").strftime("%I:%M:%S %p")), "end_time": str(datetime.strptime(str(c.end_time) , "%H:%M:%S").strftime("%I:%M:%S %p"))} for c in classes],
         "current_class": {
             "subject": ongoing_class.subject,
             "teacher": ongoing_class.teacher,
