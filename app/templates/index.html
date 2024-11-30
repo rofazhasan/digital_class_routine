@@ -9,68 +9,46 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1E2A38, #3D4E61);
+            background: linear-gradient(135deg, #1E2A38, #3D4E61); 
             background-size: 300% 300%;
             animation: gradientBG 15s ease infinite;
         }
-
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
+        /* Class Styling */
         .current-class-container {
-            width: 300px;
-            height: 300px;
+            width: 100%;
+            max-width: 350px;
+            height: 250px;
             margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: url('https://source.unsplash.com/random/300x300/?education') center/cover no-repeat;
-            border-radius: 15px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-            position: relative;
-            transition: transform 0.3s ease, background-color 0.3s ease;
+            background-color: #1B9AAA;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            color: #fff;
         }
-
-        .current-class-container:hover {
-            transform: scale(1.05);
-            background-color: rgba(27, 154, 170, 0.9);
-        }
-
-        .floating-msg {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
+        .no-class-message {
             font-size: 1.5rem;
-            color: white;
-            opacity: 0.8;
-            text-align: center;
-        }
-
-        .countdown-timer {
-            position: absolute;
-            bottom: 20px;
-            font-size: 1.2rem;
             color: #FFFAF3;
-            animation: pulse 1.5s infinite;
         }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        .section-header { color: #A8DADC; }
-        .footer-bg { background-color: #0A3D62; }
-        .day-btn {
+        .days-buttons button {
+            margin: 5px;
+            padding: 10px 15px;
+            background-color: #1B9AAA;
+            color: white;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        .day-btn:hover {
-            background-color: #1B9AAA;
-            color: white;
+        .days-buttons button:hover {
+            background-color: #15616D;
         }
     </style>
 </head>
@@ -80,35 +58,30 @@
         <div class="loader-icon"></div>
     </div>
 
-    <!-- Header with Date and Time -->
+    <!-- Header -->
     <div class="container mx-auto p-6 text-center">
         <h1 class="text-4xl font-bold section-header">Today's Classes</h1>
         <p id="date-time" class="text-lg mt-2"></p>
     </div>
 
     <!-- Current Class Section -->
-    <div class="container mx-auto p-6 overflow-hidden">
+    <div class="container mx-auto p-6">
         <h2 class="text-2xl font-semibold text-center section-header mb-4">Current Class</h2>
-        <div id="current-class" class="current-class-container text-center text-lg font-medium rounded-lg shadow-lg">
-            <p class="floating-msg" id="no-class-msg">No ongoing class</p>
-            <p id="countdown" class="countdown-timer"></p>
+        <div id="current-class" class="current-class-container text-center text-lg font-medium">
+            <p class="no-class-message">Loading...</p>
         </div>
+        <p id="countdown" class="text-center text-sm mt-2"></p>
     </div>
 
-    <!-- Class List Section -->
-    <div class="container mx-auto p-6 flex-grow">
-        <h2 class="text-2xl font-semibold text-center section-header mb-4">Today's Classes</h2>
-        <div id="class-list" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4"></div>
-    </div>
-
-    <!-- View All Classes by Day -->
-    <div class="container mx-auto p-6 text-center">
-        <h2 class="text-2xl font-semibold section-header mb-4">Classes by Day</h2>
-        <div class="flex justify-center gap-4">
-            <button class="day-btn bg-gray-700 px-4 py-2 rounded-lg" onclick="fetchClassesByDay('Monday')">Monday</button>
-            <button class="day-btn bg-gray-700 px-4 py-2 rounded-lg" onclick="fetchClassesByDay('Tuesday')">Tuesday</button>
-            <button class="day-btn bg-gray-700 px-4 py-2 rounded-lg" onclick="fetchClassesByDay('Wednesday')">Wednesday</button>
+    <!-- Day-wise Classes Section -->
+    <div class="container mx-auto p-6">
+        <h2 class="text-2xl font-semibold text-center section-header mb-4">View Classes by Day</h2>
+        <div class="text-center days-buttons">
+            <button onclick="getClassesByDay('Monday')">Monday</button>
+            <button onclick="getClassesByDay('Tuesday')">Tuesday</button>
+            <!-- Add buttons for all days -->
         </div>
+        <div id="day-classes" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4"></div>
     </div>
 
     <!-- Footer -->
@@ -116,74 +89,36 @@
         <p class="text-gray-300">Developed by Md. Rofaz Hasan Rafiu</p>
     </footer>
 
-    <!-- JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
-        window.onload = function() {
-            // Smooth Loader Handling
-            setTimeout(() => {
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
-            }, 3000);
-        };
+        const socket = io();
 
-        // Update Date and Time
         function updateDateTime() {
             const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-            document.getElementById('date-time').textContent = now.toLocaleDateString('en-US', options);
+            document.getElementById('date-time').textContent = now.toLocaleString();
         }
         setInterval(updateDateTime, 1000);
         updateDateTime();
 
-        const socket = io();
+        // Load today's data on connect
         socket.on("class_data", (data) => {
             const currentClass = document.getElementById('current-class');
-            const noClassMsg = document.getElementById('no-class-msg');
-
+            const countdown = document.getElementById('countdown');
             if (data.current_class.subject) {
                 currentClass.innerHTML = `
-                    <h3 class="text-3xl font-bold">${data.current_class.subject}</h3>
-                    <p>${data.current_class.teacher} - Room ${data.current_class.room}</p>
-                    <p>${data.current_class.start_time} - ${data.current_class.end_time}</p>
-                    <p class="countdown-timer" id="countdown"></p>`;
-                startCountdown(data.current_class.end_time);
+                    <div>
+                        <h3 class="text-2xl font-bold">${data.current_class.subject}</h3>
+                        <p>${data.current_class.teacher} - Room ${data.current_class.room}</p>
+                    </div>`;
             } else {
-                noClassMsg.style.display = 'block';
+                currentClass.innerHTML = `<p class="no-class-message">No ongoing class</p>`;
+                countdown.textContent = '';
             }
-
-            document.getElementById('class-list').innerHTML = data.today_classes.map(c => `
-                <div class="p-4 bg-gray-800 rounded-lg shadow-lg">
-                    <h3 class="text-xl font-semibold">${c.subject}</h3>
-                    <p>${c.teacher} - Room ${c.room}</p>
-                    <p>${c.start_time} - ${c.end_time}</p>
-                </div>
-            `).join('');
         });
 
-        // Countdown Timer
-        function startCountdown(endTime) {
-            const [endHours, endMinutes] = endTime.split(':').map(Number);
-            const interval = setInterval(() => {
-                const now = new Date();
-                const end = new Date();
-                end.setHours(endHours, endMinutes, 0);
-
-                const diff = Math.floor((end - now) / 1000);
-                if (diff > 0) {
-                    const minutes = Math.floor(diff / 60);
-                    const seconds = diff % 60;
-                    document.getElementById('countdown').textContent = `${minutes} min ${seconds} sec`;
-                } else {
-                    clearInterval(interval);
-                    document.getElementById('countdown').textContent = 'Class ended';
-                }
-            }, 1000);
-        }
-
-        // Fetch classes by day
-        function fetchClassesByDay(day) {
-            socket.emit('get_classes_by_day', day);
+        // Classes by day function
+        function getClassesByDay(day) {
+            socket.emit('get_day_classes', { day });
         }
     </script>
 </body>
