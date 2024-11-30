@@ -31,7 +31,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Days of the week with links -->
             {% for day in ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'] %}
-                <a href="{{ url_for('routes.weekly_schedule', day=day) }}" class="day-card text-center text-xl font-semibold">
+                <a href="{{ url_for('routes.weekly_class', day=day) }}" class="day-card text-center text-xl font-semibold">
                     {{ day }}
                 </a>
             {% endfor %}
