@@ -38,3 +38,14 @@ def emit_classes():
     }
 
   emit("class_data", data)
+@socketio.on("get_day_classes")
+def handle_get_day_classes(data):
+    day = data.get('day')
+    classes = Class.query.filter_by(day=day).all()
+    
+    response = [{"subject": c.subject, "teacher": c.teacher, "room": c.room,
+                "start_time": c.start_time.strftime("%I:%M %p"),
+                "end_time": c.end_time.strftime("%I:%M %p")} for c in classes]
+
+    emit("day_classes", response)
+
