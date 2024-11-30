@@ -36,12 +36,40 @@
         .download-btn:hover {
             background-color: #FF7A00;
         }
+
+        /* Table styling for PDF */
+        #pdf-content {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            width: 100%;
+            border-collapse: collapse;
+            color: #333;
+        }
+
+        #pdf-content th, #pdf-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #pdf-content th {
+            background-color: #1B9AAA;
+            color: white;
+        }
+
+        #pdf-content tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #pdf-content tr:hover {
+            background-color: #ddd;
+        }
     </style>
 </head>
 <body class="text-gray-100 flex flex-col min-h-screen">
     <div class="container mx-auto p-6 text-center" id="schedule">
         <h1 class="text-4xl font-bold mb-6">Weekly Class Schedule</h1>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Days of the week with links -->
             {% for day in ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'] %}
                 <a href="{{ url_for('routes.weekly_class', day=day) }}" class="day-card text-center text-xl font-semibold">
                     {{ day }}
@@ -52,59 +80,55 @@
 
     <!-- Download Button -->
     <div class="text-center mt-6">
-        <button class="download-btn text-lg font-semibold" onclick="generateWeeklyPDF()">Download Schedule as PDF</button>
-    </div>
-
-    <!-- Hidden Container for PDF -->
-    <div id="full-schedule" class="hidden">
-        <h1 class="text-4xl font-bold mb-6">Weekly Class Schedule</h1>
-        <div id="weekly-data"></div>
+        <button class="download-btn text-lg font-semibold" onclick="downloadPDF()">Download Schedule as PDF</button>
     </div>
 
     <footer class="text-center p-4 mt-auto">
         <p class="text-gray-300">Developed by Md. Rofaz Hasan Rafiu</p>
     </footer>
 
+    <!-- Hidden Table for PDF Content -->
+    <div id="pdf-container" class="hidden">
+        <h1 class="text-2xl font-bold mb-4">Weekly Class Schedule</h1>
+        <table id="pdf-content">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Classroom</th>
+                    <th>Subject</th>
+                    <th>Teacher</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for class in weekly_classes %}
+                    <tr>
+                        <td>{{ class.day }}</td>
+                        <td>{{ class.time }}</td>
+                        <td>{{ class.classroom }}</td>
+                        <td>{{ class.subject }}</td>
+                        <td>{{ class.teacher }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
     <!-- JavaScript for PDF Download -->
     <script>
-        async function fetchWeeklyData() {
-            const response = await fetch('{{ url_for("routes.weekly_class_data") }}');  // Create a route returning JSON data for all days
-            const data = await response.json();
-            return data;
-        }
-
-        function formatDataToHTML(data) {
-            let html = '<div class="text-left">';
-            for (const day in data) {
-                html += `<h2 class="text-2xl font-bold my-4">${day}</h2>`;
-                data[day].forEach(classInfo => {
-                    html += `
-                        <div class="my-2">
-                            <p><strong>Time:</strong> ${classInfo.time}</p>
-                            <p><strong>Subject:</strong> ${classInfo.subject}</p>
-                            <p><strong>Teacher:</strong> ${classInfo.teacher}</p>
-                            <p><strong>Room:</strong> ${classInfo.room}</p>
-                            <hr class="my-2">
-                        </div>`;
-                });
-            }
-            html += '</div>';
-            return html;
-        }
-
-        async function generateWeeklyPDF() {
-            const data = await fetchWeeklyData();
-            const formattedHTML = formatDataToHTML(data);
-            document.getElementById('weekly-data').innerHTML = formattedHTML;
-            const element = document.getElementById('full-schedule');
+        function downloadPDF() {
+            const element = document.getElementById('pdf-container');
             const options = {
                 margin: 0.5,
-                filename: 'weekly_schedule.pdf',
+                filename: 'full_weekly_schedule.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
-            html2pdf().set(options).from(element).save();
+            element.classList.remove('hidden');  // Make table visible for the screenshot
+            html2pdf().set(options).from(element).save().then(() => {
+                element.classList.add('hidden');  // Hide the table after downloading
+            });
         }
     </script>
 </body>
