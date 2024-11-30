@@ -20,9 +20,6 @@ Flask-SocketIO==5.4.1
 Flask-SQLAlchemy==3.1.1
 fonttools==4.54.1
 fpdf==1.7.2
-gevent==24.11.1
-gevent-socketio==0.3.6
-gevent-websocket==0.10.1
 greenlet==3.1.1
 gunicorn==23.0.0
 h11==0.14.0
