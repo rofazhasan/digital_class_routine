@@ -9,21 +9,20 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1E2A38, #3D4E61); 
+            background: linear-gradient(135deg, #1E2A38, #3D4E61);
             background-size: 300% 300%;
             animation: gradientBG 15s ease infinite;
         }
+
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* Class Styling */
         .current-class-container {
-            width: 100%;
-            max-width: 350px;
-            height: 250px;
+            width: 300px;
+            height: 300px;
             margin: 0 auto;
             display: flex;
             align-items: center;
@@ -31,94 +30,127 @@
             background-color: #1B9AAA;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            color: #fff;
+            overflow: hidden;
+            position: relative;
         }
-        .no-class-message {
-            font-size: 1.5rem;
+
+        .countdown-timer {
+            position: absolute;
+            bottom: 20px;
+            font-size: 1.2rem;
             color: #FFFAF3;
         }
-        .days-buttons button {
-            margin: 5px;
-            padding: 10px 15px;
-            background-color: #1B9AAA;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+
+        .section-header { color: #A8DADC; }
+        .footer-bg { background-color: #0A3D62; }
+
+        .floating-msg {
+            color: #FFFAF3;
+            font-size: 1.5rem;
+            animation: fadeInOut 3s ease infinite;
         }
-        .days-buttons button:hover {
-            background-color: #15616D;
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
         }
     </style>
 </head>
 <body class="text-gray-100 flex flex-col min-h-screen">
-    <!-- Loader -->
-    <div id="loader">
-        <div class="loader-icon"></div>
+    <div id="loader" class="fixed top-0 left-0 w-full h-full bg-[#1E2A38] flex justify-center items-center z-50 transition-opacity duration-500">
+        <div class="loader-icon border-t-8 border-t-[#1B9AAA] border-8 border-white rounded-full w-20 h-20 animate-spin"></div>
     </div>
 
-    <!-- Header -->
     <div class="container mx-auto p-6 text-center">
         <h1 class="text-4xl font-bold section-header">Today's Classes</h1>
         <p id="date-time" class="text-lg mt-2"></p>
     </div>
 
-    <!-- Current Class Section -->
     <div class="container mx-auto p-6">
         <h2 class="text-2xl font-semibold text-center section-header mb-4">Current Class</h2>
-        <div id="current-class" class="current-class-container text-center text-lg font-medium">
-            <p class="no-class-message">Loading...</p>
+        <div id="current-class" class="current-class-container text-center text-lg font-medium rounded-lg shadow-lg">
+            <p id="current-class-msg" class="floating-msg hidden">No ongoing class</p>
         </div>
-        <p id="countdown" class="text-center text-sm mt-2"></p>
+        <p id="countdown" class="text-center text-sm mt-2 text-gray-200"></p>
     </div>
 
-    <!-- Day-wise Classes Section -->
     <div class="container mx-auto p-6">
-        <h2 class="text-2xl font-semibold text-center section-header mb-4">View Classes by Day</h2>
-        <div class="text-center days-buttons">
-            <button onclick="getClassesByDay('Monday')">Monday</button>
-            <button onclick="getClassesByDay('Tuesday')">Tuesday</button>
-            <!-- Add buttons for all days -->
-        </div>
-        <div id="day-classes" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4"></div>
+        <h2 class="text-2xl font-semibold text-center section-header mb-4">All Classes Today</h2>
+        <div id="class-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </div>
 
-    <!-- Footer -->
     <footer class="footer-bg text-center p-4 mt-auto">
         <p class="text-gray-300">Developed by Md. Rofaz Hasan Rafiu</p>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
-        const socket = io();
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+            }, 2000);
+        };
 
         function updateDateTime() {
             const now = new Date();
-            document.getElementById('date-time').textContent = now.toLocaleString();
+            document.getElementById('date-time').textContent = now.toLocaleString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long',
+                day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
         }
         setInterval(updateDateTime, 1000);
-        updateDateTime();
 
-        // Load today's data on connect
+        const socket = io();
         socket.on("class_data", (data) => {
             const currentClass = document.getElementById('current-class');
+            const currentClassMsg = document.getElementById('current-class-msg');
             const countdown = document.getElementById('countdown');
+            const classList = document.getElementById('class-list');
+
+            // Clear existing data
+            currentClass.innerHTML = '';
+            countdown.textContent = '';
+
             if (data.current_class.subject) {
+                currentClassMsg.classList.add('hidden');
                 currentClass.innerHTML = `
                     <div>
                         <h3 class="text-2xl font-bold">${data.current_class.subject}</h3>
                         <p>${data.current_class.teacher} - Room ${data.current_class.room}</p>
+                        <p>${data.current_class.start_time} - ${data.current_class.end_time}</p>
+                        <p class="countdown-timer"></p>
                     </div>`;
+                startCountdown(data.current_class.end_time);
             } else {
-                currentClass.innerHTML = `<p class="no-class-message">No ongoing class</p>`;
-                countdown.textContent = '';
+                currentClassMsg.classList.remove('hidden');
             }
+
+            classList.innerHTML = data.today_classes.map(c => `
+                <div class="p-4 bg-gray-800 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold">${c.subject}</h3>
+                    <p>${c.teacher} - Room ${c.room}</p>
+                    <p>${c.start_time} - ${c.end_time}</p>
+                </div>`).join('');
         });
 
-        // Classes by day function
-        function getClassesByDay(day) {
-            socket.emit('get_day_classes', { day });
+        function startCountdown(endTime) {
+            const [endHours, endMinutes] = endTime.split(':').map(Number);
+            const interval = setInterval(() => {
+                const now = new Date();
+                const end = new Date();
+                end.setHours(endHours, endMinutes, 0);
+                const diff = Math.floor((end - now) / 1000);
+
+                if (diff > 0) {
+                    const minutes = Math.floor(diff / 60);
+                    const seconds = diff % 60;
+                    document.querySelector('.countdown-timer').textContent = `Ends in ${minutes} min ${seconds} sec`;
+                } else {
+                    clearInterval(interval);
+                    document.querySelector('.countdown-timer').textContent = 'Class has ended';
+                }
+            }, 1000);
         }
     </script>
 </body>
