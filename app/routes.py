@@ -2,7 +2,7 @@ from flask import Blueprint, render_template
 from flask_socketio import SocketIO, emit
 from app.models import Class
 from datetime import datetime
-
+import pytz
 routes = Blueprint('routes', __name__)
 socketio = SocketIO(cors_allowed_origins="*")
 
@@ -15,9 +15,10 @@ def handle_connect():
     emit_classes()
 
 def emit_classes():
-    today = datetime.now().strftime('%A')
+    tz=pytz.timezone('Asia/Dhaka')
+    today = datetime.now(tz).strftime('%A')
     classes_today = Class.query.filter_by(day=today).all()
-    now = datetime.now().time()
+    now = datetime.now(tz).time()
     
     # Find the ongoing class
     ongoing_class = next((c for c in classes_today if c.start_time <= now < c.end_time), None)
