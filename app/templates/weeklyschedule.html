@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weekly Schedule</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -23,10 +24,22 @@
             transform: scale(1.05);
             background-color: #15616D;
         }
+
+        .download-btn {
+            background-color: #FCA311;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #FF7A00;
+        }
     </style>
 </head>
 <body class="text-gray-100 flex flex-col min-h-screen">
-    <div class="container mx-auto p-6 text-center">
+    <div class="container mx-auto p-6 text-center" id="schedule">
         <h1 class="text-4xl font-bold mb-6">Weekly Class Schedule</h1>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Days of the week with links -->
@@ -37,8 +50,29 @@
             {% endfor %}
         </div>
     </div>
+
+    <!-- Download Button -->
+    <div class="text-center mt-6">
+        <button class="download-btn text-lg font-semibold" onclick="downloadPDF()">Download Schedule as PDF</button>
+    </div>
+
     <footer class="text-center p-4 mt-auto">
         <p class="text-gray-300">Developed by Md. Rofaz Hasan Rafiu</p>
     </footer>
+
+    <!-- JavaScript for PDF Download -->
+    <script>
+        function downloadPDF() {
+            const element = document.getElementById('schedule');
+            const options = {
+                margin: 0.5,
+                filename: 'weekly_schedule.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(options).from(element).save();
+        }
+    </script>
 </body>
 </html>
