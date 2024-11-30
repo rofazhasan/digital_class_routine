@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Schedule</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1E2A38, #3D4E61);
+        }
+
+        .day-card {
+            background-color: #1B9AAA;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .day-card:hover {
+            transform: scale(1.05);
+            background-color: #15616D;
+        }
+    </style>
+</head>
+<body class="text-gray-100 flex flex-col min-h-screen">
+    <div class="container mx-auto p-6 text-center">
+        <h1 class="text-4xl font-bold mb-6">Weekly Class Schedule</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Days of the week with links -->
+            {% for day in ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'] %}
+                <a href="{{ url_for('routes.weekly_schedule', day=day) }}" class="day-card text-center text-xl font-semibold">
+                    {{ day }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    <footer class="text-center p-4 mt-auto">
+        <p class="text-gray-300">Developed by Md. Rofaz Hasan Rafiu</p>
+    </footer>
+</body>
+</html>
