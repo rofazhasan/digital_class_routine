@@ -9,39 +9,22 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1E2A38, #3D4E61); /* Gradient Background */
-            background-size: 300% 300%;
-            animation: gradientBG 15s ease infinite;
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            background-color: #1E2A38; /* Static background for performance */
         }
 
         /* Current Class Styling */
         .current-class-container {
-            width: 250px; /* Medium Size */
+            width: 250px;
             height: 250px;
             margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: #1B9AAA;
-            border-radius: 12px; /* Rounded square */
+            border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            animation: slideIn 20s linear infinite;
-            transition: background-color 0.3s ease;
             position: relative;
-        }
-
-        .paused { animation-play-state: paused; }
-
-        @keyframes slideIn {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            transition: background-color 0.3s ease;
         }
 
         .current-class-container:hover {
@@ -58,6 +41,7 @@
 
         .section-header { color: #A8DADC; }
         .footer-bg { background-color: #0A3D62; }  /* Dark blue footer */
+        
         /* Loader Styles */
         #loader {
             position: fixed;
@@ -70,17 +54,17 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            transition: opacity 0.5s ease;
         }
+        
         .loader-icon {
             border: 8px solid #f3f3f3;
             border-top: 8px solid #1B9AAA;
             border-radius: 50%;
             width: 80px;
             height: 80px;
-            animation: spin 1.5s linear infinite;
+            animation: spin 1s linear infinite;
         }
-
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -92,6 +76,7 @@
     <div id="loader">
         <div class="loader-icon"></div>
     </div>
+
     <!-- Header with Date and Time -->
     <div class="container mx-auto p-6 text-center">
         <h1 class="text-4xl font-bold section-header">Today's Classes</h1>
@@ -99,9 +84,9 @@
     </div>
 
     <!-- Current Class Section -->
-    <div class="container mx-auto p-6 overflow-hidden">
+    <div class="container mx-auto p-6">
         <h2 class="text-2xl font-semibold text-center section-header mb-4">Current Class</h2>
-        <div id="current-class" class="current-class-container text-center text-lg font-medium current-class-bg rounded-lg shadow-lg"></div>
+        <div id="current-class" class="current-class-container text-center text-lg font-medium rounded-lg shadow-lg"></div>
         <p id="countdown" class="text-center text-sm mt-2 text-gray-200"></p>
     </div>
 
@@ -110,10 +95,11 @@
         <h2 class="text-2xl font-semibold text-center section-header mb-4">Today's Classes</h2>
         <div id="class-list" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4"></div>
     </div>
+
     <div class="text-center mt-6">
-    <a href="{{ url_for('routes.weekly_schedule') }}" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow-lg hover:bg-blue-700">
-        View Weekly Schedule
-    </a>
+        <a href="{{ url_for('routes.weekly_schedule') }}" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow-lg hover:bg-blue-700">
+            View Weekly Schedule
+        </a>
     </div>
 
     <!-- Footer -->
@@ -121,22 +107,14 @@
         <p class="text-gray-300">Developed by Md. Rofaz Hasan Rafiu</p>
     </footer>
 
-    <!-- JavaScript for Socket.IO, Date-Time, and Countdown -->
+    <!-- JavaScript for Date-Time and Countdown -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
-        <!-- JavaScript for Loader, Date-Time, and Socket.IO -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <script>
-        // Loader Handling
+        // Hide loader after content is ready
         window.onload = function() {
-            setTimeout(function() {
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(function() {
-                    document.getElementById('loader').style.display = 'none';
-                    document.getElementById('content').style.display = 'block';
-                }, 2000); // Smooth fade-out
-            }, 4000); // Simulated loading time (adjust as needed)
+            document.getElementById('loader').style.display = 'none';
         };
+
         // Update Date and Time
         function updateDateTime() {
             const now = new Date();
@@ -151,18 +129,15 @@
 
         socket.on("class_data", (data) => {
             const currentClass = document.getElementById('current-class');
-            if (data.current_class && data.current_class.subject) {
+            if (data.current_class) {
                 currentClass.innerHTML = `
-                    <div>
-                        <h3 class="text-2xl font-bold">${data.current_class.subject}</h3>
-                        <p>${data.current_class.teacher} - Room ${data.current_class.room}</p>
-                        <p>${data.current_class.start_time} - ${data.current_class.end_time}</p>
-                        <p class="countdown-timer" id="countdown"></p>
-                    </div>`;
+                    <h3 class="text-2xl font-bold">${data.current_class.subject}</h3>
+                    <p>${data.current_class.teacher} - Room ${data.current_class.room}</p>
+                    <p>${data.current_class.start_time} - ${data.current_class.end_time}</p>
+                `;
                 startCountdown(data.current_class.end_time);
             } else {
-                currentClass.innerHTML = `<p class="text-lg text-gray-800">No ongoing class</p>`;
-                document.getElementById('countdown').textContent = '';
+                currentClass.innerHTML = `<p class="text-lg text-gray-300">No ongoing class</p>`;
             }
 
             document.getElementById('class-list').innerHTML = data.today_classes.map(c => `
@@ -174,17 +149,10 @@
             `).join('');
         });
 
-        // Pause animation on hover
-        const currentClassDiv = document.getElementById('current-class');
-        currentClassDiv.addEventListener('mouseenter', () => currentClassDiv.classList.add('paused'));
-        currentClassDiv.addEventListener('mouseleave', () => currentClassDiv.classList.remove('paused'));
-
-        // Countdown Timer Function
         function startCountdown(endTime) {
-            const endParts = endTime.split(':');
-            const now = new Date();
+            const [endHour, endMinute] = endTime.split(':').map(Number);
             const end = new Date();
-            end.setHours(parseInt(endParts[0]), parseInt(endParts[1]), 0);
+            end.setHours(endHour, endMinute, 0);
 
             const interval = setInterval(() => {
                 const now = new Date();
