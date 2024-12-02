@@ -17,7 +17,7 @@ def handle_connect():
 def emit_classes():
     tz=pytz.timezone('Asia/Dhaka')
     today = datetime.now(tz).strftime('%A')
-    classes_today = Class.query.filter_by(day=today).all()
+    classes_today = Class.query.filter_by(day=today).order_by(Class.id).all()
     now = datetime.now(tz).time()
     
     # Find the ongoing class
@@ -28,7 +28,7 @@ def emit_classes():
     days = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday"]
     
     for day in days:
-        day_classes = Class.query.filter_by(day=day).all()
+        day_classes = Class.query.filter_by(day=day).order_by(Class.id).all()
         weekly_classes.append({
             "day": day,
             "classes": [{"subject": c.subject, "teacher": c.teacher, "start_time": str(datetime.strptime(str(c.start_time), "%H:%M:%S").strftime("%I:%M %p")), "end_time": str(datetime.strptime(str(c.end_time), "%H:%M:%S").strftime("%I:%M %p"))} for c in day_classes]
