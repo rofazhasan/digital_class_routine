@@ -63,6 +63,6 @@ def weekly_schedule():
 
 @routes.route("/weeklyschedule/<day>")
 def weekly_class(day):
-    classes = Class.query.filter_by(day=day).all()
+    classes = Class.query.filter_by(day=day).order_by(Class.id).all()
     return render_template("day_classes.html", day=day, classes=classes)
 
